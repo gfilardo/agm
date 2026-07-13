@@ -87,13 +87,25 @@
 
                     <!-- Read Tab -->
                     <div id="tab-read" class="tab-content hidden">
-                        <p>Scan the incoming message QR code from your Public Relay device.</p>
-                        <button type="button" id="btn-scan-incoming" class="btn btn-secondary w-100 mb-4">Start Scanner</button>
+                        <p style="margin-bottom: 1rem;">Scan the incoming message QR code from your Public Relay device, or paste the payload manually.</p>
+                        
+                        <div class="form-group">
+                            <label>Paste encrypted payload (JSON)</label>
+                            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                                <textarea id="input-manual-incoming" rows="4" placeholder='{"meta":..., "pay":...}'></textarea>
+                                <button type="button" id="btn-decrypt-manual" class="btn btn-primary w-100">Decrypt Payload</button>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin: 1.5rem 0; color: #94a3b8; font-size: 0.875rem;">— OR —</div>
+
+                        <button type="button" id="btn-scan-incoming" class="btn btn-secondary w-100 mb-4">Scan QR Code</button>
                         <div id="scanner-incoming-container" class="scanner-container hidden">
                             <div id="reader-incoming"></div>
-                            <button type="button" id="btn-stop-scan-incoming" class="btn btn-danger btn-sm mt-2">Stop</button>
+                            <button type="button" id="btn-stop-scan-incoming" class="btn btn-danger btn-sm mt-2">Stop Scanner</button>
                         </div>
-                        <div id="decrypt-result" class="result-box hidden">
+                        
+                        <div id="decrypt-result" class="result-box hidden mt-4">
                             <label>Decrypted Message:</label>
                             <p id="decrypted-text" class="message-text"></p>
                         </div>

@@ -201,6 +201,13 @@ const app = (function() {
             scanContainerIncoming.classList.add('hidden');
         });
 
+        // Private Mode: Read (Manual Input)
+        document.getElementById('btn-decrypt-manual').addEventListener('click', () => {
+            const payload = document.getElementById('input-manual-incoming').value.trim();
+            if (!payload) return alert("Please paste the encrypted payload.");
+            handleIncomingScan(payload);
+        });
+
         // Public Mode: Scan Outbound
         const scanContainerOutbound = document.getElementById('scanner-outbound-container');
         document.getElementById('btn-scan-outbound').addEventListener('click', () => {
