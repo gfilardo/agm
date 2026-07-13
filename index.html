@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGWM - Air-Gapped Web Messenger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Landing View -->
+        <div id="view-landing" class="view active">
+            <div class="glass-panel">
+                <div class="logo">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <h1>AGWM</h1>
+                </div>
+                <p class="subtitle">Air-Gapped Web Messenger</p>
+                <div class="mode-selection">
+                    <button type="button" id="btn-mode-private" class="btn btn-primary btn-large" onclick="app.showView('view-private')">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Private Device (Air-Gapped)</span>
+                    </button>
+                    <button type="button" id="btn-mode-public" class="btn btn-secondary btn-large" onclick="app.showView('view-public')">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <span>Public Relay (Online)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Private Mode View -->
+        <div id="view-private" class="view">
+            <header class="glass-header">
+                <button type="button" class="btn-back" onclick="app.showView('view-landing')"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2>Private Mode</h2>
+                <div class="status-indicator offline"><i class="fa-solid fa-plane"></i> Offline</div>
+            </header>
+            
+            <div class="content-scroll">
+                <div id="private-setup" class="glass-panel hidden">
+                    <h3>Setup First Identity</h3>
+                    <p>Generate your first secure keypair to get started.</p>
+                    <div class="form-group">
+                        <label>Identity Name / Purpose</label>
+                        <input type="text" id="input-setup-name" placeholder="e.g. Personal, Work, Anonymous" value="Personal">
+                    </div>
+                    <button type="button" id="btn-generate-keys" class="btn btn-primary">Generate Keys</button>
+                </div>
+
+                <div id="private-dashboard" class="glass-panel hidden">
+                    <div class="tabs">
+                        <button type="button" class="tab active" data-target="tab-compose">Compose</button>
+                        <button type="button" class="tab" data-target="tab-read">Read</button>
+                        <button type="button" class="tab" data-target="tab-identity">Identities</button>
+                        <button type="button" class="tab" data-target="tab-contacts">Contacts</button>
+                    </div>
+
+                    <!-- Compose Tab -->
+                    <div id="tab-compose" class="tab-content active">
+                        <div class="form-group">
+                            <label>Send As (Your Identity)</label>
+                            <select id="select-sender-identity"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Recipient Contact</label>
+                            <select id="select-recipient-contact">
+                                <option value="manual">Manual Entry (Provide Key Below)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="group-recipient-pub">
+                            <label>Recipient Public Key (Base64)</label>
+                            <input type="text" id="input-recipient-pub" placeholder="Paste recipient's public key">
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea id="input-message" rows="4" placeholder="Enter your secret message..."></textarea>
+                        </div>
+                        <button type="button" id="btn-encrypt" class="btn btn-primary w-100">Encrypt to QR</button>
+                        
+                        <div id="encrypt-result" class="qr-result hidden">
+                            <p>Scan this with your Public Relay device:</p>
+                            <div id="qr-outbound" class="qr-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- Read Tab -->
+                    <div id="tab-read" class="tab-content hidden">
+                        <p>Scan the incoming message QR code from your Public Relay device.</p>
+                        <button type="button" id="btn-scan-incoming" class="btn btn-secondary w-100 mb-4">Start Scanner</button>
+                        <div id="scanner-incoming-container" class="scanner-container hidden">
+                            <div id="reader-incoming"></div>
+                            <button type="button" id="btn-stop-scan-incoming" class="btn btn-danger btn-sm mt-2">Stop</button>
+                        </div>
+                        <div id="decrypt-result" class="result-box hidden">
+                            <label>Decrypted Message:</label>
+                            <p id="decrypted-text" class="message-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- Identity Tab -->
+                    <div id="tab-identity" class="tab-content hidden">
+                        <div id="identities-list-container">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div class="new-identity-form">
+                            <h4>Create New Identity</h4>
+                            <div class="form-group">
+                                <input type="text" id="input-new-identity-name" placeholder="Name (e.g. Work)">
+                            </div>
+                            <button type="button" id="btn-create-new-identity" class="btn btn-secondary w-100">Generate New Keypair</button>
+                        </div>
+                    </div>
+
+                    <!-- Contacts Tab -->
+                    <div id="tab-contacts" class="tab-content hidden">
+                        <div id="contacts-list-container">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div class="new-identity-form mt-4">
+                            <h4>Add New Contact</h4>
+                            <div class="form-group">
+                                <input type="text" id="input-new-contact-name" placeholder="Contact Name (e.g. Alice)">
+                            </div>
+                            <div class="form-group mt-2">
+                                <label style="margin-bottom: 0.5rem; display: block; color: var(--text-color); font-size: 0.875rem;">Contact's Public Key (Base64)</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="input-new-contact-pub" placeholder="Paste or scan key" style="flex: 1;">
+                                    <button type="button" id="btn-scan-contact-pub" class="btn btn-primary" title="Scan QR"><i class="fa-solid fa-qrcode"></i></button>
+                                </div>
+                            </div>
+                            <div id="scanner-contact-container" class="scanner-container hidden mt-2">
+                                <div id="reader-contact"></div>
+                                <button type="button" id="btn-stop-scan-contact" class="btn btn-danger btn-sm mt-2">Stop Scanner</button>
+                            </div>
+                            <button type="button" id="btn-add-contact" class="btn btn-secondary w-100 mt-2">Save Contact</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Public Mode View -->
+        <div id="view-public" class="view">
+            <header class="glass-header">
+                <button type="button" class="btn-back" onclick="app.showView('view-landing')"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2>Public Relay</h2>
+                <div class="status-indicator online"><i class="fa-solid fa-globe"></i> Online</div>
+            </header>
+            
+            <div class="content-scroll">
+                <div class="glass-panel">
+                    <div class="tabs">
+                        <button type="button" class="tab active" data-target="tab-relay-out">Send</button>
+                        <button type="button" class="tab" data-target="tab-relay-in">Receive</button>
+                    </div>
+
+                    <!-- Send Tab -->
+                    <div id="tab-relay-out" class="tab-content active">
+                        <p>Scan the encrypted QR from your Private device to copy the payload.</p>
+                        <button type="button" id="btn-scan-outbound" class="btn btn-primary w-100 mb-4">Start Scanner</button>
+                        <div id="scanner-outbound-container" class="scanner-container hidden">
+                            <div id="reader-outbound"></div>
+                            <button type="button" id="btn-stop-scan-outbound" class="btn btn-danger btn-sm mt-2">Stop</button>
+                        </div>
+                        <div id="scan-result-outbound" class="result-box hidden">
+                            <div class="success-message"><i class="fa-solid fa-check-circle"></i> Copied to clipboard!</div>
+                            <textarea id="payload-outbound-text" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Receive Tab -->
+                    <div id="tab-relay-in" class="tab-content hidden">
+                        <div class="form-group">
+                            <label>Paste incoming payload (JSON)</label>
+                            <textarea id="input-incoming-payload" rows="4" placeholder='{"meta":..., "pay":...}'></textarea>
+                        </div>
+                        <button type="button" id="btn-show-incoming-qr" class="btn btn-secondary w-100">Show as QR</button>
+                        
+                        <div id="incoming-qr-result" class="qr-result hidden">
+                            <p>Scan this with your Private device:</p>
+                            <div id="qr-inbound" class="qr-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vite App Logic -->
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
