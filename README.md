@@ -4,7 +4,7 @@
 
 ### 1. Concept Statement
 
-An asymmetric, ultra-secure messaging system that eliminates operating-system and network-based attack vectors by isolating cryptographic key generation, message encryption, and decryption on a device physically disconnected from the internet (*air-gapped*). The system leverages a 100% web-based architecture (Flutter Web / HTML5) to maximize accessibility and deployment ease. It utilizes existing commercial messaging networks (e.g., Signal, WhatsApp) as blind data transport relays ("postmen") for encrypted, anonymized payloads via effortless QR code scanning and clipboard orchestration.
+An asymmetric, ultra-secure messaging system that eliminates operating-system and network-based attack vectors by isolating cryptographic key generation, message encryption, and decryption on a device physically disconnected from the internet (*air-gapped*). The system leverages a 100% web-based architecture (Vanilla JS/HTML5) to maximize accessibility and deployment ease. It utilizes existing commercial messaging networks (e.g., Signal, WhatsApp) as blind data transport relays ("postmen") for encrypted, anonymized payloads via effortless QR code scanning and clipboard orchestration.
 
 ---
 
@@ -83,7 +83,7 @@ Data exchanged via QR code uses a tight, structured JSON format containing a pla
 
 * **`meta.v`**: Protocol version string.
 * **`meta.kid`**: Plaintext `Key_ID` hint. Used by the receiving Private Device to select the appropriate decryption key from local storage.
-* **`pay`**: Armor-encoded ciphertext encrypted using Curve25519 (X25519) key exchange combined with symmetric authenticated encryption (ChaCha20-Poly1305).
+* **`pay`**: Armor-encoded ciphertext encrypted using Curve25519 (X25519) key exchange combined with symmetric authenticated encryption (XSalsa20-Poly1305).
 
 ---
 
@@ -122,11 +122,15 @@ sequenceDiagram
 
 ### 5. Technical Stack & Browser Sandbox Mitigations
 
-#### Chosen Framework: Flutter Web
+#### Chosen Framework: Vanilla JavaScript + Vite
 
-* **Language:** Dart
-* **Deployment Target:** Web (WASM / JavaScript compilation optimized for single-page application execution).
-* **Cryptographic Layer:** `cryptography` package or native Web Crypto APIs executing standard `X25519` and `ChaCha20-Poly1305`.
+* **Language:** JavaScript (ES6+), HTML5, CSS3
+* **Deployment Target:** Web (Static SPA optimized for offline execution).
+* **Cryptographic Layer:** `tweetnacl.js` executing standard public-key authenticated encryption. Specifically:
+  * **Key Exchange:** X25519 (Curve25519)
+  * **Symmetric Encryption:** XSalsa20
+  * **Message Authentication (MAC):** Poly1305
+  * **Key ID Hashing:** SHA-512 (first 8 bytes)
 
 #### Bypassing Browser Constraints in Air-Gap Environments
 
@@ -168,3 +172,16 @@ To bypass this restriction on Chrome for Android during development:
 4. Restart the browser.
 
 This explicitly trusts your local development IP, allowing the webcam to work locally without a valid public certificate.
+
+---
+
+### 6. Possible Project Developments
+
+The current implementation serves as a functional proof-of-concept for secure, air-gapped messaging. Future iterations could expand the system's capabilities through the following enhancements:
+
+* **Native Mobile Applications:** Rebuilding the Public Relay and Private Terminal as native iOS/Android applications (e.g., using Flutter or React Native). This would allow for better OS integration, superior camera control, and entirely eliminating browser sandbox limitations on air-gapped devices.
+* **Air-Gapped File Transfers:** Upgrading the protocol from text-only messages to support binary file transfers (photos, compressed documents). This would require breaking files into chunks and using animated QR codes (e.g., leveraging Fountain Codes and the Blockchain Commons UR Standard) rendered in native 8-bit Byte mode for maximum QR density.
+* **Robust Key Exchange:** Implementing an interactive, QR-based Diffie-Hellman handshake or out-of-band verification (like scanning a shared signature) to secure the initial public key exchange against Man-in-the-Middle (MitM) attacks.
+* **Plausible Deniability:** Introducing a "duress PIN" or hidden volume feature. If a user is forced to unlock the Private Device, entering the duress PIN would load a completely fake, benign set of identities and messages, mathematically hiding the existence of the true encrypted data.
+* **Hardware Security Keys:** Offloading the storage of the `secretKey` to a physical hardware token (like a YubiKey, standard FIDO2 token, or a dedicated ESP32 hardware wallet). This ensures that even if the air-gapped device is compromised physically, the cryptographic keys cannot be extracted.
+* **Ephemeral Sessions (Perfect Forward Secrecy):** Upgrading the cryptographic layer to use the Double Ratchet Algorithm (similar to the Signal Protocol) to generate ephemeral session keys for each message. This guarantees Perfect Forward Secrecy—meaning if a long-term identity key is ever compromised, past messages remain completely indecipherable.
