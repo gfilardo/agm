@@ -1,4 +1,4 @@
-# Air-Gapped Web Messenger (AGWM)
+# Air-Gapped Messenger (AGM)
 
 ## Architectural Design & Specification
 
@@ -114,7 +114,7 @@ sequenceDiagram
 
 #### Workflow B: Inbound Message (Network $\rightarrow$ Public $\rightarrow$ Private)
 
-1. **Public Relay:** The user copies the incoming encrypted string from Signal/WhatsApp, opens the AGWM Web App, and pastes it into the incoming terminal interface. The Web App converts this data into a fullscreen QR code.
+1. **Public Relay:** The user copies the incoming encrypted string from Signal/WhatsApp, opens the AGM Web App, and pastes it into the incoming terminal interface. The Web App converts this data into a fullscreen QR code.
 2. **Private Terminal:** The user scans the public display using the offline device's webcam.
 3. **Decryption:** The offline app extracts `meta.kid`, locates the matching private key in its local browser state, decodes the ciphertext payload, and prints the plaintext message to the screen.
 

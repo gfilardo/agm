@@ -1,5 +1,5 @@
 {
-  "name": "agwm",
+  "name": "agm",
   "version": "1.0.0",
   "description": "An asymmetric, ultra-secure messaging system that eliminates operating-system and network-based attack vectors by isolating cryptographic key generation, message encryption, and decryption on a device physically disconnected from the internet (*air-gapped*). The system leverages a 100% web-based architecture (Flutter Web / HTML5) to maximize accessibility and deployment ease. It utilizes existing commercial messaging networks (e.g., Signal, WhatsApp) as blind data transport relays (\"postmen\") for encrypted, anonymized payloads via effortless QR code scanning and clipboard orchestration.",
   "main": "main.js",
@@ -10,16 +10,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gfilardo/agwm.git"
+    "url": "git+https://github.com/gfilardo/agm.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/gfilardo/agwm/issues"
+    "url": "https://github.com/gfilardo/agm/issues"
   },
-  "homepage": "https://github.com/gfilardo/agwm#readme",
+  "homepage": "https://github.com/gfilardo/agm#readme",
   "dependencies": {
     "html5-qrcode": "^2.3.8",
     "qrcode": "^1.5.4",

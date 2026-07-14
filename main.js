@@ -1,8 +1,8 @@
 import './styles.css';
-import { AGWMCrypto } from './crypto.js';
-import { AGWMQR } from './qr.js';
+import { AGMCrypto } from './crypto.js';
+import { AGMQR } from './qr.js';
 
-const app = (function() {
+const app = (function () {
     // State
     let identities = [];
     let contacts = [];
@@ -19,7 +19,7 @@ const app = (function() {
             legacyId.id = "id_" + Date.now();
             identities = [legacyId];
             saveIdentities();
-            localStorage.removeItem('agwm_identity');
+            localStorage.removeItem('_identity');
         }
 
         const storedContacts = localStorage.getItem('agwm_contacts');
@@ -50,13 +50,13 @@ const app = (function() {
                 e.preventDefault();
                 const targetId = e.target.getAttribute('data-target');
                 const viewEl = e.target.closest('.view');
-                
+
                 viewEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 viewEl.querySelectorAll('.tab-content').forEach(tc => {
                     tc.classList.add('hidden');
                     tc.classList.remove('active');
                 });
-                
+
                 e.target.classList.add('active');
                 const targetContent = document.getElementById(targetId);
                 targetContent.classList.remove('hidden');
@@ -96,7 +96,7 @@ const app = (function() {
             const pubKey = pubInput.value.trim();
 
             if (!name || !pubKey) return alert("Please enter both a name and a public key.");
-            
+
             try {
                 // Validate base64 format by decoding
                 AGWMCrypto.util.decodeBase64(pubKey);
@@ -107,7 +107,7 @@ const app = (function() {
             const newContact = { id: "contact_" + Date.now(), name, publicKey: pubKey };
             contacts.push(newContact);
             saveContacts();
-            
+
             nameInput.value = "";
             pubInput.value = "";
             if (document.getElementById('tab-contacts').classList.contains('active')) {
@@ -128,7 +128,7 @@ const app = (function() {
                 document.getElementById('input-new-contact-pub').value = decodedText;
             });
         });
-        
+
         document.getElementById('btn-stop-scan-contact').addEventListener('click', () => {
             AGWMQR.stopScan();
             scanContainerContact.classList.add('hidden');
@@ -148,7 +148,7 @@ const app = (function() {
         document.getElementById('btn-encrypt').addEventListener('click', () => {
             const recipientContactId = document.getElementById('select-recipient-contact').value;
             let recipientPub = "";
-            
+
             if (recipientContactId === 'manual') {
                 recipientPub = document.getElementById('input-recipient-pub').value.trim();
             } else {
@@ -165,18 +165,18 @@ const app = (function() {
             try {
                 const activeId = getIdentityById(senderId);
                 const ciphertext = AGWMCrypto.encryptMessage(message, recipientPub, activeId.secretKey);
-                
+
                 const payloadObj = {
-                    meta: { 
-                        v: "1.0", 
-                        kid: activeId.kid, 
+                    meta: {
+                        v: "1.0",
+                        kid: activeId.kid,
                         spub: activeId.publicKey // Sender pub key included for stateless decrypt
                     },
                     pay: ciphertext
                 };
 
                 const jsonStr = JSON.stringify(payloadObj);
-                
+
                 document.getElementById('encrypt-result').classList.remove('hidden');
                 AGWMQR.generate('qr-outbound', jsonStr);
             } catch (e) {
@@ -216,7 +216,7 @@ const app = (function() {
             AGWMQR.startScan('reader-outbound', (decodedText) => {
                 AGWMQR.stopScan();
                 scanContainerOutbound.classList.add('hidden');
-                
+
                 // Copy to clipboard
                 navigator.clipboard.writeText(decodedText).then(() => {
                     document.getElementById('scan-result-outbound').classList.remove('hidden');
@@ -238,7 +238,7 @@ const app = (function() {
         document.getElementById('btn-show-incoming-qr').addEventListener('click', () => {
             const payload = document.getElementById('input-incoming-payload').value.trim();
             if (!payload) return;
-            
+
             document.getElementById('incoming-qr-result').classList.remove('hidden');
             AGWMQR.generate('qr-inbound', payload);
         });
@@ -259,7 +259,7 @@ const app = (function() {
                     break;
                 }
             }
-            
+
             document.getElementById('decrypt-result').classList.remove('hidden');
             if (decrypted) {
                 document.getElementById('decrypted-text').innerText = decrypted + `\n\n(Decrypted using identity: ${decryptedWith.name})`;
@@ -297,7 +297,7 @@ const app = (function() {
             identities.push(newIdentity);
             saveIdentities();
             checkPrivateSetupState();
-            if(document.getElementById('tab-identity').classList.contains('active')) {
+            if (document.getElementById('tab-identity').classList.contains('active')) {
                 renderIdentities();
             }
             alert("Keypair generated successfully!");
@@ -311,10 +311,10 @@ const app = (function() {
         const container = document.getElementById('identities-list-container');
         if (!container) return;
         const select = document.getElementById('select-sender-identity');
-        
+
         container.innerHTML = '';
         if (select) select.innerHTML = '';
-        
+
         identities.forEach(idObj => {
             const card = document.createElement('div');
             card.className = `identity-card-wrapper`;
@@ -354,13 +354,13 @@ const app = (function() {
     function toggleIdentityDetails(id) {
         const idObj = identities.find(i => i.id === id);
         if (!idObj) return;
-        
+
         const detailsEl = document.getElementById(`details-${id}`);
         const isCurrentlyOpen = detailsEl.classList.contains('open');
-        
+
         // Close all others
         document.querySelectorAll('.identity-details').forEach(el => el.classList.remove('open'));
-        
+
         if (!isCurrentlyOpen) {
             detailsEl.classList.add('open');
             const qrContainer = document.getElementById(`qr-my-identity-${id}`);
@@ -371,7 +371,7 @@ const app = (function() {
     }
 
     function deleteIdentity(id) {
-        if(confirm("Are you sure you want to delete this identity?")) {
+        if (confirm("Are you sure you want to delete this identity?")) {
             identities = identities.filter(i => i.id !== id);
             saveIdentities();
             checkPrivateSetupState();
@@ -381,9 +381,9 @@ const app = (function() {
     function updateContactDropdown() {
         const select = document.getElementById('select-recipient-contact');
         if (!select) return;
-        
+
         const currentVal = select.value;
-        
+
         select.innerHTML = '<option value="manual">Manual Entry (Provide Key Below)</option>';
         contacts.forEach(c => {
             const option = document.createElement('option');
@@ -391,11 +391,11 @@ const app = (function() {
             option.innerText = c.name;
             select.appendChild(option);
         });
-        
+
         if (currentVal === 'manual' || contacts.find(c => c.id === currentVal)) {
             select.value = currentVal;
         }
-        
+
         const groupPub = document.getElementById('group-recipient-pub');
         if (select.value === 'manual') {
             groupPub.classList.remove('hidden');
@@ -408,12 +408,12 @@ const app = (function() {
         const container = document.getElementById('contacts-list-container');
         if (!container) return;
         container.innerHTML = '';
-        
+
         if (contacts.length === 0) {
             container.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem; text-align: center;">No contacts saved yet.</p>';
             return;
         }
-        
+
         contacts.forEach(c => {
             const card = document.createElement('div');
             card.className = `identity-card-wrapper`;
@@ -433,7 +433,7 @@ const app = (function() {
     }
 
     function deleteContact(id) {
-        if(confirm("Are you sure you want to delete this contact?")) {
+        if (confirm("Are you sure you want to delete this contact?")) {
             contacts = contacts.filter(c => c.id !== id);
             saveContacts();
             renderContacts();
@@ -446,11 +446,11 @@ const app = (function() {
         deleteContact: deleteContact,
         toggleIdentityDetails: toggleIdentityDetails,
         deleteIdentity: deleteIdentity,
-        showView: function(viewId) {
+        showView: function (viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
             AGWMQR.stopScan(); // Ensure cameras are stopped
-            
+
             if (viewId === 'view-private') {
                 checkPrivateSetupState();
             }
