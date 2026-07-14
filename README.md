@@ -173,6 +173,29 @@ To bypass this restriction on Chrome for Android during development:
 
 This explicitly trusts your local development IP, allowing the webcam to work locally without a valid public certificate.
 
+#### Running the Offline Terminal (Releases)
+
+To make deployment to air-gapped devices as easy as possible, the project uses a GitHub Actions workflow to automatically compress the entire application (HTML, CSS, JS, and Cryptography) into a single, portable `.html` file whenever a new version is tagged.
+
+You can download `agm-offline-terminal.html` from the **Releases** page on GitHub. 
+
+To run it on an air-gapped device with the proper webcam permissions, you cannot simply double-click the file (browsers often block the webcam on the `file:///` protocol). Instead, you must serve it over `localhost`, which all browsers inherently trust as a Secure Context.
+
+**On Linux / Mac:**
+1. Download `agm-offline-terminal.html` and place it in an empty folder.
+2. Open a terminal in that folder and run Python's built-in web server:
+   ```bash
+   python3 -m http.server 8000
+   ```
+3. Open your browser and navigate to `http://localhost:8000/agm-offline-terminal.html`.
+
+**On Android:**
+If you are using a completely offline Android phone as your air-gapped terminal:
+1. Transfer the `.html` file to your phone via USB.
+2. Install a lightweight local server app like **"Simple HTTP Server"** (available via APK from F-Droid or the Play Store).
+3. Open the app, point it to the folder containing your HTML file, and tap "Start Server".
+4. Open your mobile browser and navigate to the local address provided by the app (usually `http://localhost:8080/agm-offline-terminal.html`).
+
 ---
 
 ### 6. Possible Project Developments
