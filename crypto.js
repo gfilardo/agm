@@ -9,8 +9,8 @@ function computeKeyId(publicKeyUint8) {
     return hex;
 }
 
-export const AGWMCrypto = {
-    generateKeyPair: function() {
+export const AGMCrypto = {
+    generateKeyPair: function () {
         const keyPair = nacl.box.keyPair();
         const kid = computeKeyId(keyPair.publicKey);
         return {
@@ -21,25 +21,25 @@ export const AGWMCrypto = {
     },
 
     // Encrypt message for recipient
-    encryptMessage: function(messageStr, recipientPublicKeyBase64, senderSecretKeyBase64) {
+    encryptMessage: function (messageStr, recipientPublicKeyBase64, senderSecretKeyBase64) {
         const recipientPub = util.decodeBase64(recipientPublicKeyBase64);
         const senderSec = util.decodeBase64(senderSecretKeyBase64);
-        
+
         const nonce = nacl.randomBytes(nacl.box.nonceLength);
         const messageUint8 = util.decodeUTF8(messageStr);
-        
+
         const encrypted = nacl.box(messageUint8, nonce, recipientPub, senderSec);
-        
+
         // Payload format: nonce (24 bytes) + ciphertext
         const payload = new Uint8Array(nonce.length + encrypted.length);
         payload.set(nonce);
         payload.set(encrypted, nonce.length);
-        
+
         return util.encodeBase64(payload);
     },
 
     // Decrypt message from sender
-    decryptMessage: function(payloadBase64, senderPublicKeyBase64, mySecretKeyBase64) {
+    decryptMessage: function (payloadBase64, senderPublicKeyBase64, mySecretKeyBase64) {
         try {
             const payload = util.decodeBase64(payloadBase64);
             const senderPub = util.decodeBase64(senderPublicKeyBase64);
@@ -52,7 +52,7 @@ export const AGWMCrypto = {
             if (!decrypted) {
                 throw new Error("Decryption failed (invalid key or tampered payload).");
             }
-            
+
             return util.encodeUTF8(decrypted);
         } catch (err) {
             console.error("Decryption error:", err);

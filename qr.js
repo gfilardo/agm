@@ -1,18 +1,18 @@
 import QRCode from 'qrcode';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 
-export const AGWMQR = (function() {
+export const AGMQR = (function () {
     let currentScanner = null;
 
     return {
-        generate: async function(elementId, text) {
+        generate: async function (elementId, text) {
             const container = document.getElementById(elementId);
             if (!container) return;
-            
+
             container.innerHTML = ''; // clear previous
             const canvas = document.createElement('canvas');
             container.appendChild(canvas);
-            
+
             try {
                 await QRCode.toCanvas(canvas, text, {
                     width: 256,
@@ -27,7 +27,7 @@ export const AGWMQR = (function() {
             }
         },
 
-        startScan: async function(elementId, onScanSuccess) {
+        startScan: async function (elementId, onScanSuccess) {
             if (currentScanner) {
                 await this.stopScan();
             }
@@ -36,14 +36,14 @@ export const AGWMQR = (function() {
             currentScanner = html5QrCode;
 
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            
+
             try {
                 await html5QrCode.start(
                     { facingMode: "environment" },
                     config,
                     (decodedText, decodedResult) => {
                         // Pause on success to prevent multiple rapid scans
-                        if(currentScanner) {
+                        if (currentScanner) {
                             html5QrCode.pause();
                             onScanSuccess(decodedText);
                         }
@@ -58,13 +58,13 @@ export const AGWMQR = (function() {
             }
         },
 
-        stopScan: async function() {
+        stopScan: async function () {
             if (currentScanner) {
                 try {
                     // Html5QrcodeScannerState enum is missing in some older exports, fallback to string if needed
-                    const state = typeof Html5QrcodeScannerState !== 'undefined' 
-                        ? Html5QrcodeScannerState.PAUSED : 2; 
-                        
+                    const state = typeof Html5QrcodeScannerState !== 'undefined'
+                        ? Html5QrcodeScannerState.PAUSED : 2;
+
                     if (currentScanner.getState() === state) {
                         currentScanner.resume();
                     }
@@ -73,17 +73,17 @@ export const AGWMQR = (function() {
                     console.error("Stop scan error", e);
                 }
                 currentScanner = null;
-                
+
                 // Also clear the container element content just to be safe
                 document.getElementById('reader-incoming').innerHTML = '';
                 document.getElementById('reader-outbound').innerHTML = '';
             }
         },
-        
-        resumeScan: function() {
+
+        resumeScan: function () {
             if (currentScanner) {
-                 const state = typeof Html5QrcodeScannerState !== 'undefined' 
-                        ? Html5QrcodeScannerState.PAUSED : 2;
+                const state = typeof Html5QrcodeScannerState !== 'undefined'
+                    ? Html5QrcodeScannerState.PAUSED : 2;
                 if (currentScanner.getState() === state) {
                     currentScanner.resume();
                 }
