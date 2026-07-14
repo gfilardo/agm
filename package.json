@@ -1,6 +1,6 @@
 {
   "name": "agm",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "An asymmetric, ultra-secure messaging system that eliminates operating-system and network-based attack vectors by isolating cryptographic key generation, message encryption, and decryption on a device physically disconnected from the internet (*air-gapped*). The system leverages a 100% web-based architecture (Flutter Web / HTML5) to maximize accessibility and deployment ease. It utilizes existing commercial messaging networks (e.g., Signal, WhatsApp) as blind data transport relays (\"postmen\") for encrypted, anonymized payloads via effortless QR code scanning and clipboard orchestration.",
   "main": "main.js",
   "scripts": {
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-basic-ssl": "^2.3.0",
-    "vite-plugin-qrcode": "^0.4.1"
+    "vite-plugin-qrcode": "^0.4.1",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }
