@@ -8,8 +8,8 @@ const app = (function () {
     let contacts = [];
 
     function init() {
-        const storedIdentities = localStorage.getItem('agwm_identities');
-        const storedLegacy = localStorage.getItem('agwm_identity');
+        const storedIdentities = localStorage.getItem('agm_identities');
+        const storedLegacy = localStorage.getItem('agm_identity');
 
         if (storedIdentities) {
             identities = JSON.parse(storedIdentities);
@@ -22,7 +22,7 @@ const app = (function () {
             localStorage.removeItem('_identity');
         }
 
-        const storedContacts = localStorage.getItem('agwm_contacts');
+        const storedContacts = localStorage.getItem('agm_contacts');
         if (storedContacts) {
             contacts = JSON.parse(storedContacts);
         }
@@ -32,11 +32,11 @@ const app = (function () {
     }
 
     function saveIdentities() {
-        localStorage.setItem('agwm_identities', JSON.stringify(identities));
+        localStorage.setItem('agm_identities', JSON.stringify(identities));
     }
 
     function saveContacts() {
-        localStorage.setItem('agwm_contacts', JSON.stringify(contacts));
+        localStorage.setItem('agm_contacts', JSON.stringify(contacts));
     }
 
     function getIdentityById(id) {
@@ -66,7 +66,7 @@ const app = (function () {
                 if (targetId === 'tab-identity') renderIdentities();
                 if (targetId === 'tab-contacts') renderContacts();
                 if (targetId !== 'tab-read' && targetId !== 'tab-relay-out') {
-                    AGWMQR.stopScan(); // stop camera if switching away
+                    AGMQR.stopScan(); // stop camera if switching away
                 }
             });
         });
@@ -99,7 +99,7 @@ const app = (function () {
 
             try {
                 // Validate base64 format by decoding
-                AGWMCrypto.util.decodeBase64(pubKey);
+                AGMCrypto.util.decodeBase64(pubKey);
             } catch (err) {
                 return alert("Invalid public key format. It must be valid Base64.");
             }
@@ -122,15 +122,15 @@ const app = (function () {
         document.getElementById('btn-scan-contact-pub').addEventListener('click', (e) => {
             e.preventDefault();
             scanContainerContact.classList.remove('hidden');
-            AGWMQR.startScan('reader-contact', (decodedText) => {
-                AGWMQR.stopScan();
+            AGMQR.startScan('reader-contact', (decodedText) => {
+                AGMQR.stopScan();
                 scanContainerContact.classList.add('hidden');
                 document.getElementById('input-new-contact-pub').value = decodedText;
             });
         });
 
         document.getElementById('btn-stop-scan-contact').addEventListener('click', () => {
-            AGWMQR.stopScan();
+            AGMQR.stopScan();
             scanContainerContact.classList.add('hidden');
         });
 
@@ -164,7 +164,7 @@ const app = (function () {
 
             try {
                 const activeId = getIdentityById(senderId);
-                const ciphertext = AGWMCrypto.encryptMessage(message, recipientPub, activeId.secretKey);
+                const ciphertext = AGMCrypto.encryptMessage(message, recipientPub, activeId.secretKey);
 
                 const payloadObj = {
                     meta: {
@@ -178,7 +178,7 @@ const app = (function () {
                 const jsonStr = JSON.stringify(payloadObj);
 
                 document.getElementById('encrypt-result').classList.remove('hidden');
-                AGWMQR.generate('qr-outbound', jsonStr);
+                AGMQR.generate('qr-outbound', jsonStr);
             } catch (e) {
                 alert("Encryption failed. Check recipient public key format.");
                 console.error(e);
@@ -189,15 +189,15 @@ const app = (function () {
         const scanContainerIncoming = document.getElementById('scanner-incoming-container');
         document.getElementById('btn-scan-incoming').addEventListener('click', () => {
             scanContainerIncoming.classList.remove('hidden');
-            AGWMQR.startScan('reader-incoming', (decodedText) => {
-                AGWMQR.stopScan();
+            AGMQR.startScan('reader-incoming', (decodedText) => {
+                AGMQR.stopScan();
                 scanContainerIncoming.classList.add('hidden');
                 handleIncomingScan(decodedText);
             });
         });
 
         document.getElementById('btn-stop-scan-incoming').addEventListener('click', () => {
-            AGWMQR.stopScan();
+            AGMQR.stopScan();
             scanContainerIncoming.classList.add('hidden');
         });
 
@@ -213,8 +213,8 @@ const app = (function () {
         document.getElementById('btn-scan-outbound').addEventListener('click', () => {
             scanContainerOutbound.classList.remove('hidden');
             document.getElementById('scan-result-outbound').classList.add('hidden');
-            AGWMQR.startScan('reader-outbound', (decodedText) => {
-                AGWMQR.stopScan();
+            AGMQR.startScan('reader-outbound', (decodedText) => {
+                AGMQR.stopScan();
                 scanContainerOutbound.classList.add('hidden');
 
                 // Copy to clipboard
@@ -230,7 +230,7 @@ const app = (function () {
         });
 
         document.getElementById('btn-stop-scan-outbound').addEventListener('click', () => {
-            AGWMQR.stopScan();
+            AGMQR.stopScan();
             scanContainerOutbound.classList.add('hidden');
         });
 
@@ -240,7 +240,7 @@ const app = (function () {
             if (!payload) return;
 
             document.getElementById('incoming-qr-result').classList.remove('hidden');
-            AGWMQR.generate('qr-inbound', payload);
+            AGMQR.generate('qr-inbound', payload);
         });
     }
 
@@ -253,7 +253,7 @@ const app = (function () {
             let decryptedWith = null;
 
             for (const idObj of identities) {
-                decrypted = AGWMCrypto.decryptMessage(data.pay, data.meta.spub, idObj.secretKey);
+                decrypted = AGMCrypto.decryptMessage(data.pay, data.meta.spub, idObj.secretKey);
                 if (decrypted) {
                     decryptedWith = idObj;
                     break;
@@ -288,7 +288,7 @@ const app = (function () {
 
     function generateNewIdentity(name) {
         try {
-            const keys = AGWMCrypto.generateKeyPair();
+            const keys = AGMCrypto.generateKeyPair();
             const newIdentity = {
                 id: "id_" + Date.now(),
                 name: name,
@@ -365,7 +365,7 @@ const app = (function () {
             detailsEl.classList.add('open');
             const qrContainer = document.getElementById(`qr-my-identity-${id}`);
             if (qrContainer.innerHTML === '') {
-                AGWMQR.generate(`qr-my-identity-${id}`, idObj.publicKey);
+                AGMQR.generate(`qr-my-identity-${id}`, idObj.publicKey);
             }
         }
     }
@@ -449,7 +449,7 @@ const app = (function () {
         showView: function (viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            AGWMQR.stopScan(); // Ensure cameras are stopped
+            AGMQR.stopScan(); // Ensure cameras are stopped
 
             if (viewId === 'view-private') {
                 checkPrivateSetupState();

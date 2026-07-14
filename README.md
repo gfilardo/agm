@@ -153,3 +153,18 @@ sequenceDiagram
 2. **Service Worker Interception:** The app installs a Service Worker that caches all application bundles (`.wasm`, `.js`, assets) locally within the browser's persistent storage engine.
 3. **Air-Gap Activation:** The user completely severs the device's physical and wireless network links (enabling permanent Airplane Mode).
 4. **Execution:** Because the browser tracks that the origin domain was successfully verified over `https://`, it treats the application environment as a **Secure Context** indefinitely. The user can refresh the page or reboot the device; the app will boot straight from the offline cache, and the webcam will remain fully functional without ever making a network request.
+
+#### Local Network Development
+
+If you are developing or testing AGM locally and want to access the dev server from your mobile device on the same Wi-Fi network (to test webcam scanning), you must use HTTPS. This project uses `@vitejs/plugin-basic-ssl` to automatically provide a self-signed certificate for the local dev server.
+
+**Important Caveat for Mobile Webcams:**
+When accessing the local development URL (`https://<your-local-ip>:5173`) from your phone, you will encounter a "connection is not private" warning because the certificate is self-signed. You can bypass it to view the page. However, modern mobile browsers (especially Chrome on Android) may **still block the webcam** because they do not consider self-signed local IPs to be a fully secure context.
+
+To bypass this restriction on Chrome for Android during development:
+1. Navigate to `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+2. Enable the flag.
+3. Add your local development URL (e.g., `http://192.168.x.x:5173`) to the text box.
+4. Restart the browser.
+
+This explicitly trusts your local development IP, allowing the webcam to work locally without a valid public certificate.
