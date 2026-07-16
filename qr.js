@@ -22,8 +22,10 @@ export const AGMQR = (function () {
                     },
                     errorCorrectionLevel: 'L'
                 });
+                return canvas;
             } catch (err) {
                 console.error("QR Generation error", err);
+                return null;
             }
         },
 

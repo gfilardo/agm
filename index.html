@@ -172,15 +172,41 @@
 
                     <!-- Send Tab -->
                     <div id="tab-relay-out" class="tab-content active">
-                        <p>Scan the encrypted QR from your Private device to copy the payload.</p>
+                        <p>Scan the encrypted QR from your Private device to send it.</p>
+                        
+                        <div class="format-toggle-group mb-4 mt-2">
+                            <label class="toggle-option">
+                                <input type="radio" name="relay-format" value="qr" checked>
+                                <span class="toggle-label"><i class="fa-solid fa-qrcode"></i> QR Image</span>
+                            </label>
+                            <label class="toggle-option">
+                                <input type="radio" name="relay-format" value="text">
+                                <span class="toggle-label"><i class="fa-solid fa-align-left"></i> Raw Text</span>
+                            </label>
+                        </div>
+
                         <button type="button" id="btn-scan-outbound" class="btn btn-primary w-100 mb-4">Start Scanner</button>
                         <div id="scanner-outbound-container" class="scanner-container hidden">
                             <div id="reader-outbound"></div>
                             <button type="button" id="btn-stop-scan-outbound" class="btn btn-danger btn-sm mt-2">Stop</button>
                         </div>
+                        
                         <div id="scan-result-outbound" class="result-box hidden">
-                            <div class="success-message"><i class="fa-solid fa-check-circle"></i> Copied to clipboard!</div>
-                            <textarea id="payload-outbound-text" rows="3" readonly></textarea>
+                            <div class="success-message mb-2" id="outbound-auto-copy-msg"><i class="fa-solid fa-check-circle"></i> Auto-copied!</div>
+                            
+                            <div class="result-section">
+                                <label style="text-align: center; display: block;">QR Code Image</label>
+                                <div id="qr-outbound-relay" class="qr-container mb-2"></div>
+                                <button type="button" id="btn-copy-outbound-qr" class="btn btn-secondary btn-sm w-100"><i class="fa-solid fa-copy"></i> Copy Image</button>
+                            </div>
+
+                            <div class="result-section mt-4">
+                                <label>Raw JSON Text</label>
+                                <textarea id="payload-outbound-text" rows="3" readonly class="mb-2" style="font-size: 0.8rem;"></textarea>
+                                <button type="button" id="btn-copy-outbound-text" class="btn btn-secondary btn-sm w-100"><i class="fa-solid fa-copy"></i> Copy Text</button>
+                            </div>
+
+                            <button type="button" id="btn-share-outbound" class="btn btn-primary w-100 mt-4"><i class="fa-solid fa-share-nodes"></i> Share via App...</button>
                         </div>
                     </div>
 
