@@ -211,12 +211,14 @@ const app = (function () {
         // Public Mode: Scan Outbound
         const scanContainerOutbound = document.getElementById('scanner-outbound-container');
         let currentOutboundCanvas = null;
+        let currentOutboundBlob = null;
         let currentOutboundText = "";
 
         document.getElementById('btn-scan-outbound').addEventListener('click', () => {
             scanContainerOutbound.classList.remove('hidden');
             document.getElementById('scan-result-outbound').classList.add('hidden');
             document.getElementById('outbound-auto-copy-msg').classList.add('hidden');
+            currentOutboundBlob = null;
             
             AGMQR.startScan('reader-outbound', async (decodedText) => {
                 AGMQR.stopScan();
@@ -229,6 +231,9 @@ const app = (function () {
                 
                 // Generate QR Code
                 currentOutboundCanvas = await AGMQR.generate('qr-outbound-relay', decodedText);
+                if (currentOutboundCanvas) {
+                    currentOutboundCanvas.toBlob(b => currentOutboundBlob = b);
+                }
                 
                 // Auto-copy based on toggle
                 const format = document.querySelector('input[name="relay-format"]:checked').value;
@@ -253,27 +258,31 @@ const app = (function () {
             if (currentOutboundText) copyTextToClipboard(currentOutboundText);
         });
 
-        document.getElementById('btn-share-outbound').addEventListener('click', () => {
+        document.getElementById('btn-share-outbound').addEventListener('click', async () => {
             if (!navigator.share) {
                 alert("Native sharing is not supported on this device/browser.");
                 return;
             }
             
             const format = document.querySelector('input[name="relay-format"]:checked').value;
+            const shareTextFallback = () => {
+                navigator.share({ title: "AGM Payload", text: currentOutboundText }).catch(console.error);
+            };
             
-            if (format === 'qr' && currentOutboundCanvas) {
-                currentOutboundCanvas.toBlob((blob) => {
-                    const file = new File([blob], "agm-payload.png", { type: "image/png" });
-                    navigator.share({
-                        title: "AGM Payload",
-                        files: [file]
-                    }).catch(console.error);
-                });
+            if (format === 'qr' && currentOutboundBlob) {
+                const file = new File([currentOutboundBlob], "agm-payload.png", { type: "image/png" });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ title: "AGM Payload", files: [file] });
+                    } catch (err) {
+                        console.error("Share failed", err);
+                    }
+                } else {
+                    alert("Your browser restricts sharing images directly. Falling back to text sharing.");
+                    shareTextFallback();
+                }
             } else {
-                navigator.share({
-                    title: "AGM Payload",
-                    text: currentOutboundText
-                }).catch(console.error);
+                shareTextFallback();
             }
         });
 
