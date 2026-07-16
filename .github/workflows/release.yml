@@ -27,8 +27,8 @@ jobs:
       - name: Build Web App
         run: npm run build
 
-      - name: Rename HTML File
-        run: mv dist/index.html dist/agm-offline-terminal.html
+      - name: Copy HTML File for Release
+        run: cp dist/index.html dist/agm-offline-terminal.html
 
       - name: Setup Java
         uses: actions/setup-java@v4
