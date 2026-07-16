@@ -175,27 +175,25 @@ This explicitly trusts your local development IP, allowing the webcam to work lo
 
 #### Running the Offline Terminal (Releases)
 
-To make deployment to air-gapped devices as easy as possible, the project uses a GitHub Actions workflow to automatically compress the entire application (HTML, CSS, JS, and Cryptography) into a single, portable `.html` file whenever a new version is tagged.
+To make deployment to air-gapped devices as easy as possible, the project uses a GitHub Actions workflow to automatically compress the entire application into portable release files whenever a new version is tagged.
 
-You can download `agm-offline-terminal.html` from the **Releases** page on GitHub. 
+You can download both the **Standalone Android APK** and the **Single-File HTML** from the **Releases** page on GitHub. 
 
-To run it on an air-gapped device with the proper webcam permissions, you cannot simply double-click the file (browsers often block the webcam on the `file:///` protocol). Instead, you must serve it over `localhost`, which all browsers inherently trust as a Secure Context.
+**On Android (The Recommended Way):**
+The easiest and most secure way to run the air-gapped terminal is using the Capacitor-wrapped native APK.
+1. Download `agm-offline-terminal.apk` from the GitHub Releases page.
+2. Transfer the `.apk` file to your offline Android phone via USB.
+3. Tap the file to install it. *(Note: Because it is an unsigned debug build, you may need to tap "More details -> Install anyway" on the Play Protect warning, or enable "Install Unknown Apps" in your settings).*
+4. Open the App! It behaves like a native application and has full, permanent offline camera permissions.
 
-**On Linux / Mac:**
+**On Linux / Mac (or Browser-based fallback):**
+If you cannot install the APK, you can run the single-file HTML version. However, browsers block webcam access on the `file:///` protocol, so you must serve it over `localhost` (which is inherently trusted as a Secure Context).
 1. Download `agm-offline-terminal.html` and place it in an empty folder.
 2. Open a terminal in that folder and run Python's built-in web server:
    ```bash
    python3 -m http.server 8000
    ```
 3. Open your browser and navigate to `http://localhost:8000/agm-offline-terminal.html`.
-
-**On Android:**
-If you are using a completely offline Android phone as your air-gapped terminal:
-1. Transfer the `.html` file to your phone via USB.
-2. Install a lightweight local server app like **"Simple HTTP Server"** (available via APK from F-Droid or the Play Store).
-3. Open the app, point it to the folder containing your HTML file, and tap "Start Server".
-4. Open your mobile browser and navigate to the local address provided by the app (usually `http://localhost:8080/agm-offline-terminal.html`).
-
 ---
 
 ### 6. Possible Project Developments

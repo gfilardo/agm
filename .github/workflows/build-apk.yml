@@ -4,7 +4,12 @@ on:
   push:
     branches:
       - feature/capacitor-android
+    tags:
+      - 'v*'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-android:
@@ -38,8 +43,18 @@ jobs:
         working-directory: ./android
         run: ./gradlew assembleDebug
 
+      - name: Rename APK
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/agm-offline-terminal.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: agm-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: agm-offline-terminal.apk
+          path: android/app/build/outputs/apk/debug/agm-offline-terminal.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/agm-offline-terminal.apk
+          generate_release_notes: true
