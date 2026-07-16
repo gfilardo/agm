@@ -1,6 +1,9 @@
 import './styles.css';
 import { AGMCrypto } from './crypto.js';
 import { AGMQR } from './qr.js';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const app = (function () {
     // State
@@ -212,13 +215,14 @@ const app = (function () {
         const scanContainerOutbound = document.getElementById('scanner-outbound-container');
         let currentOutboundCanvas = null;
         let currentOutboundBlob = null;
+        let currentOutboundBase64 = null;
         let currentOutboundText = "";
 
         document.getElementById('btn-scan-outbound').addEventListener('click', () => {
             scanContainerOutbound.classList.remove('hidden');
             document.getElementById('scan-result-outbound').classList.add('hidden');
-            document.getElementById('outbound-auto-copy-msg').classList.add('hidden');
             currentOutboundBlob = null;
+            currentOutboundBase64 = null;
             
             AGMQR.startScan('reader-outbound', async (decodedText) => {
                 AGMQR.stopScan();
@@ -233,14 +237,7 @@ const app = (function () {
                 currentOutboundCanvas = await AGMQR.generate('qr-outbound-relay', decodedText);
                 if (currentOutboundCanvas) {
                     currentOutboundCanvas.toBlob(b => currentOutboundBlob = b);
-                }
-                
-                // Auto-copy based on toggle
-                const format = document.querySelector('input[name="relay-format"]:checked').value;
-                if (format === 'qr' && currentOutboundCanvas) {
-                    copyCanvasToClipboard(currentOutboundCanvas);
-                } else {
-                    copyTextToClipboard(decodedText);
+                    currentOutboundBase64 = currentOutboundCanvas.toDataURL('image/png').split(',')[1];
                 }
             });
         });
@@ -259,12 +256,45 @@ const app = (function () {
         });
 
         document.getElementById('btn-share-outbound').addEventListener('click', async () => {
+            const format = document.querySelector('input[name="relay-format"]:checked').value;
+            
+            if (Capacitor.isNativePlatform()) {
+                if (format === 'qr' && currentOutboundBase64) {
+                    try {
+                        const path = 'agm-payload.png';
+                        const result = await Filesystem.writeFile({
+                            path: path,
+                            data: currentOutboundBase64,
+                            directory: Directory.Cache
+                        });
+                        
+                        await Share.share({
+                            title: 'AGM Payload',
+                            url: result.uri
+                        });
+                    } catch (e) {
+                        console.error("Native Capacitor Share failed", e);
+                        alert("Native share failed. Please use Copy buttons.");
+                    }
+                } else {
+                    try {
+                        await Share.share({
+                            title: 'AGM Payload',
+                            text: currentOutboundText
+                        });
+                    } catch (e) {
+                        console.error("Native Capacitor Share text failed", e);
+                    }
+                }
+                return;
+            }
+
+            // Web Fallback
             if (!navigator.share) {
                 alert("Native sharing is not supported on this desktop browser. Please use the 'Copy' buttons above instead!");
                 return;
             }
             
-            const format = document.querySelector('input[name="relay-format"]:checked').value;
             const shareTextFallback = () => {
                 navigator.share({ title: "AGM Payload", text: currentOutboundText }).catch(console.error);
             };
@@ -288,9 +318,7 @@ const app = (function () {
 
         function copyTextToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                const msg = document.getElementById('outbound-auto-copy-msg');
-                msg.innerHTML = '<i class="fa-solid fa-check-circle"></i> Text copied!';
-                msg.classList.remove('hidden');
+                alert("Text copied to clipboard!");
             }).catch(err => alert("Could not copy text."));
         }
 
@@ -302,9 +330,7 @@ const app = (function () {
                 }
                 const item = new ClipboardItem({ "image/png": blob });
                 navigator.clipboard.write([item]).then(() => {
-                    const msg = document.getElementById('outbound-auto-copy-msg');
-                    msg.innerHTML = '<i class="fa-solid fa-check-circle"></i> QR Image copied!';
-                    msg.classList.remove('hidden');
+                    alert("QR Image copied to clipboard!");
                 }).catch(err => {
                     console.error("Clipboard write failed", err);
                     alert("Image copy blocked by browser. Please use the Share button instead.");
