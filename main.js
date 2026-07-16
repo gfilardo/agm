@@ -260,7 +260,7 @@ const app = (function () {
 
         document.getElementById('btn-share-outbound').addEventListener('click', async () => {
             if (!navigator.share) {
-                alert("Native sharing is not supported on this device/browser.");
+                alert("Native sharing is not supported on this desktop browser. Please use the 'Copy' buttons above instead!");
                 return;
             }
             
