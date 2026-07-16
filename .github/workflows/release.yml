@@ -1,12 +1,12 @@
-name: Build and Release Single HTML
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*' # Triggers workflow only when a tag starting with "v" (e.g., v0.0.1) is pushed
+      - 'v*'
 
 permissions:
-  contents: write # Required to create a release
+  contents: write
 
 jobs:
   build-and-release:
@@ -19,19 +19,37 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Single HTML File
+      - name: Build Web App
         run: npm run build
 
-      - name: Rename Output File
+      - name: Rename HTML File
         run: mv dist/index.html dist/agm-offline-terminal.html
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build APK
+        working-directory: ./android
+        run: ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/agm-offline-terminal.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/agm-offline-terminal.html
+          files: |
+            dist/agm-offline-terminal.html
+            android/app/build/outputs/apk/debug/agm-offline-terminal.apk
           generate_release_notes: true
