@@ -182,4 +182,13 @@ textarea[readonly] { background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px da
 .new-identity-form { background: rgba(0,0,0,0.15); padding: 1rem; border-radius: 12px; border: 1px dashed var(--glass-border); }
 .new-identity-form h4 { margin-bottom: 1rem; font-size: 0.9rem; color: #cbd5e1; }
 
+/* Relay Toggle & Result */
+.format-toggle-group { display: flex; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px; gap: 4px; }
+.toggle-option { flex: 1; text-align: center; cursor: pointer; }
+.toggle-option input[type="radio"] { display: none; }
+.toggle-label { display: block; padding: 8px; border-radius: 6px; color: #94a3b8; font-size: 0.9rem; transition: all 0.2s; }
+.toggle-option input[type="radio"]:checked + .toggle-label { background: var(--primary-color); color: white; font-weight: 500; }
+.result-section { background: rgba(0,0,0,0.15); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); }
+.result-section label { margin-bottom: 0.5rem; display: block; color: var(--text-color); font-size: 0.85rem; font-weight: 500; }
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

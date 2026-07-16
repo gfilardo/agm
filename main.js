@@ -210,22 +210,33 @@ const app = (function () {
 
         // Public Mode: Scan Outbound
         const scanContainerOutbound = document.getElementById('scanner-outbound-container');
+        let currentOutboundCanvas = null;
+        let currentOutboundText = "";
+
         document.getElementById('btn-scan-outbound').addEventListener('click', () => {
             scanContainerOutbound.classList.remove('hidden');
             document.getElementById('scan-result-outbound').classList.add('hidden');
-            AGMQR.startScan('reader-outbound', (decodedText) => {
+            document.getElementById('outbound-auto-copy-msg').classList.add('hidden');
+            
+            AGMQR.startScan('reader-outbound', async (decodedText) => {
                 AGMQR.stopScan();
                 scanContainerOutbound.classList.add('hidden');
-
-                // Copy to clipboard
-                navigator.clipboard.writeText(decodedText).then(() => {
-                    document.getElementById('scan-result-outbound').classList.remove('hidden');
-                    document.getElementById('payload-outbound-text').value = decodedText;
-                }).catch(err => {
-                    alert("Could not copy to clipboard. Please copy manually.");
-                    document.getElementById('scan-result-outbound').classList.remove('hidden');
-                    document.getElementById('payload-outbound-text').value = decodedText;
-                });
+                currentOutboundText = decodedText;
+                
+                // Show result box
+                document.getElementById('scan-result-outbound').classList.remove('hidden');
+                document.getElementById('payload-outbound-text').value = decodedText;
+                
+                // Generate QR Code
+                currentOutboundCanvas = await AGMQR.generate('qr-outbound-relay', decodedText);
+                
+                // Auto-copy based on toggle
+                const format = document.querySelector('input[name="relay-format"]:checked').value;
+                if (format === 'qr' && currentOutboundCanvas) {
+                    copyCanvasToClipboard(currentOutboundCanvas);
+                } else {
+                    copyTextToClipboard(decodedText);
+                }
             });
         });
 
@@ -233,6 +244,64 @@ const app = (function () {
             AGMQR.stopScan();
             scanContainerOutbound.classList.add('hidden');
         });
+
+        document.getElementById('btn-copy-outbound-qr').addEventListener('click', () => {
+            if (currentOutboundCanvas) copyCanvasToClipboard(currentOutboundCanvas);
+        });
+
+        document.getElementById('btn-copy-outbound-text').addEventListener('click', () => {
+            if (currentOutboundText) copyTextToClipboard(currentOutboundText);
+        });
+
+        document.getElementById('btn-share-outbound').addEventListener('click', () => {
+            if (!navigator.share) {
+                alert("Native sharing is not supported on this device/browser.");
+                return;
+            }
+            
+            const format = document.querySelector('input[name="relay-format"]:checked').value;
+            
+            if (format === 'qr' && currentOutboundCanvas) {
+                currentOutboundCanvas.toBlob((blob) => {
+                    const file = new File([blob], "agm-payload.png", { type: "image/png" });
+                    navigator.share({
+                        title: "AGM Payload",
+                        files: [file]
+                    }).catch(console.error);
+                });
+            } else {
+                navigator.share({
+                    title: "AGM Payload",
+                    text: currentOutboundText
+                }).catch(console.error);
+            }
+        });
+
+        function copyTextToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const msg = document.getElementById('outbound-auto-copy-msg');
+                msg.innerHTML = '<i class="fa-solid fa-check-circle"></i> Text copied!';
+                msg.classList.remove('hidden');
+            }).catch(err => alert("Could not copy text."));
+        }
+
+        function copyCanvasToClipboard(canvas) {
+            canvas.toBlob((blob) => {
+                if (!navigator.clipboard || !navigator.clipboard.write) {
+                    alert("Image copying is not supported by your browser. Please use the Share button.");
+                    return;
+                }
+                const item = new ClipboardItem({ "image/png": blob });
+                navigator.clipboard.write([item]).then(() => {
+                    const msg = document.getElementById('outbound-auto-copy-msg');
+                    msg.innerHTML = '<i class="fa-solid fa-check-circle"></i> QR Image copied!';
+                    msg.classList.remove('hidden');
+                }).catch(err => {
+                    console.error("Clipboard write failed", err);
+                    alert("Image copy blocked by browser. Please use the Share button instead.");
+                });
+            });
+        }
 
         // Public Mode: Show Incoming
         document.getElementById('btn-show-incoming-qr').addEventListener('click', () => {
