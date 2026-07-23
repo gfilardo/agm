@@ -258,7 +258,7 @@ const app = (function () {
         document.getElementById('btn-share-outbound').addEventListener('click', async () => {
             const format = document.querySelector('input[name="relay-format"]:checked').value;
             
-            if (Capacitor.isNativePlatform()) {
+            if (Capacitor.isNativePlatform() || (window.Capacitor && window.Capacitor.isNative)) {
                 if (format === 'qr' && currentOutboundBase64) {
                     try {
                         const path = 'agm-payload.png';
@@ -269,21 +269,25 @@ const app = (function () {
                         });
                         
                         await Share.share({
-                            title: 'AGM Payload',
-                            url: result.uri
+                            title: 'AGM Payload QR',
+                            text: 'Scan this QR code to receive the encrypted payload.',
+                            url: result.uri,
+                            dialogTitle: 'Share QR Code'
                         });
                     } catch (e) {
                         console.error("Native Capacitor Share failed", e);
-                        alert("Native share failed. Please use Copy buttons.");
+                        alert("Native share failed: " + e.message);
                     }
                 } else {
                     try {
                         await Share.share({
-                            title: 'AGM Payload',
-                            text: currentOutboundText
+                            title: 'AGM Payload Text',
+                            text: currentOutboundText,
+                            dialogTitle: 'Share Payload Data'
                         });
                     } catch (e) {
                         console.error("Native Capacitor Share text failed", e);
+                        alert("Native share failed: " + e.message);
                     }
                 }
                 return;
@@ -291,7 +295,7 @@ const app = (function () {
 
             // Web Fallback
             if (!navigator.share) {
-                alert("Native sharing is not supported on this desktop browser. Please use the 'Copy' buttons above instead!");
+                alert("Sharing is not supported on this device/browser. Please use the Copy buttons instead.");
                 return;
             }
             
@@ -317,15 +321,19 @@ const app = (function () {
         });
 
         function copyTextToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Text copied to clipboard!");
-            }).catch(err => alert("Could not copy text."));
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert("Text copied to clipboard!");
+                }).catch(err => alert("Could not copy text."));
+            } else {
+                alert("Clipboard API not available. Please manually copy the text.");
+            }
         }
 
         function copyCanvasToClipboard(canvas) {
             canvas.toBlob((blob) => {
                 if (!navigator.clipboard || !navigator.clipboard.write) {
-                    alert("Image copying is not supported by your browser. Please use the Share button.");
+                    alert("Image copying is not supported natively by your browser. Please use the 'Share via App' button instead to send it to WhatsApp/Signal.");
                     return;
                 }
                 const item = new ClipboardItem({ "image/png": blob });
@@ -333,7 +341,7 @@ const app = (function () {
                     alert("QR Image copied to clipboard!");
                 }).catch(err => {
                     console.error("Clipboard write failed", err);
-                    alert("Image copy blocked by browser. Please use the Share button instead.");
+                    alert("Your system blocks copying images directly to the clipboard. Please use the 'Share via App' button instead to send it to WhatsApp/Signal.");
                 });
             });
         }
