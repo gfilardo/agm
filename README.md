@@ -20,7 +20,22 @@ Traditional air-gapped systems mitigate key compromise but introduce extreme fri
 
 ---
 
-### 3. Conceptual Design
+### 3. Core Architectural & Security Principles
+
+To guarantee uncompromised privacy and security, all present and future developments in the AGM ecosystem must strictly adhere to these foundational principles:
+
+1. **Absolute Private Key Isolation:** Private cryptographic keys must be generated, stored, and used exclusively on the air-gapped device. They must **never** be exfiltrated, exported, or exposed to any online or relay device under any circumstances.
+2. **Device-Enclosed Cryptography:** All encryption, decryption, payload sealing, and signature verification operations occur strictly on the air-gapped terminal. Online relays act solely as blind data transport couriers ("postmen") with zero knowledge or access.
+3. **Metadata Minimization:** Unencrypted plaintext data and transport headers (such as `Key_ID` hints or protocol version tags) must be kept to the absolute minimum necessary for key lookup and routing by the recipient air-gapped device.
+4. **Security & Privacy Over Ergonomics:** While user experience and relay convenience are valued, security, privacy, and air-gap integrity are paramount and take absolute precedence whenever a design trade-off occurs.
+5. **Exchange Medium Fungibility:** The physical exchange medium between the air-gapped device and the online relay (or between air-gapped devices) must remain transport-agnostic and fungible. Payloads should be exchangeable via optical channels (QR codes), acoustic data-over-sound (ultrasound), light (infrared/IR), physical hardware (USB), haptics/vibrations, or file transfer.
+6. **Plausible Deniability:** The protocol and system architecture must support plausible deniability (e.g., hidden cryptographic vaults, duress PINs, dummy identity keyrings, untraceable payload structures).
+7. **Defense-in-Depth & Layered Security:** The system design must accommodate optional modular security layers, such as steganography (hiding encrypted payloads inside images, audio, or benign text) and outer cover ciphers.
+8. **Maximum Serialization & Payload Efficiency:** Packets and payload structures must be as byte-dense and lightweight as possible. Inefficient text wrappers (such as Base64 string encoding inside JSON objects) must be avoided for binary data or file transfers. Native binary serialization formats (such as Protocol Buffers / Protobuf or CBOR) should be preferred to maximize data density per frame, reduce transmission latency, and optimize bandwidth across constrained air-gap channels (optical QR codes, acoustic ultrasound, or IR).
+
+---
+
+### 4. Conceptual Design
 
 #### Architecture Overview
 
@@ -87,7 +102,7 @@ Data exchanged via QR code uses a tight, structured JSON format containing a pla
 
 ---
 
-### 4. Application Workflows
+### 5. Application Workflows
 
 #### Key Exchange Procedure (Initial Setup)
 
@@ -120,7 +135,7 @@ sequenceDiagram
 
 ---
 
-### 5. Technical Stack & Browser Sandbox Mitigations
+### 6. Technical Stack & Browser Sandbox Mitigations
 
 #### Chosen Framework: Vanilla JavaScript + Vite
 
@@ -196,7 +211,7 @@ If you cannot install the APK, you can run the single-file HTML version. However
 3. Open your browser and navigate to `http://localhost:8000/agm-offline-terminal.html`.
 ---
 
-### 6. Possible Project Developments
+### 7. Possible Project Developments
 
 The current implementation serves as a functional proof-of-concept for secure, air-gapped messaging. Future iterations could expand the system's capabilities through the following enhancements:
 
@@ -212,7 +227,7 @@ The current implementation serves as a functional proof-of-concept for secure, a
 
 ---
 
-### 7. Hardware Implementations & Data Serialization
+### 8. Hardware Implementations & Data Serialization
 
 When implementing the Private Context (offline device) on a physical microcontroller such as an ESP32 with a camera module, the data exchanged between the C/C++ embedded environment and the JavaScript web application must be strictly defined and highly optimized. Because the payload must fit within the size constraints of a QR code, an **Interface Description Language (IDL)** or a compact binary serialization format is required.
 
