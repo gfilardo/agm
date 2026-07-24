@@ -50,7 +50,8 @@ This document presents the formal sequence of operations in AGM and details the 
 3. **Payload Formats:**
    - **Format 1 (Raw Hex Text):** Elligator 2 encodes the 32-byte public key into 32 bytes of uniform random noise, formatted as a 64-character hex string (`e3b0c44298fc1c1...`).
    - **Format 2 (Generic Binary File):** Elligator 2 noise bytes padded with random bytes and saved as `key_data.dat`.
-4. **Execution:** Sender pastes/sends hex string or `.dat` file via chat network. Recipient pastes string or imports file into Airgap Device B, which executes `Elligator2.decode()` to recover the public key and save the contact.
+4. **Metadata Privacy Mechanics:** Because 100% of all 32-byte strings decode to a valid curve point under Elligator 2, network analytics filters obtain zero evidence that $r$ was intended as a key rather than uniform random noise (see [Technical Specification Section 2.3](TECHNICAL_SPECIFICATION.md#23-mathematical-basis-of-unobtrusive-privacy-in-elligator-2)).
+5. **Execution:** Sender pastes/sends hex string or `.dat` file via chat network. Recipient pastes string or imports file into Airgap Device B, which executes `Elligator2.decode()` to recover the public key and save the contact.
 
 ---
 

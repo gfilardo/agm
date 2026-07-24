@@ -349,7 +349,9 @@ const app = (function () {
 
         // Key Modal Close
         document.getElementById('btn-close-key-modal').addEventListener('click', () => {
-            document.getElementById('modal-key-export').classList.add('hidden');
+            const modal = document.getElementById('modal-key-export');
+            modal.classList.add('hidden');
+            modal.classList.remove('active');
         });
     }
 
@@ -463,6 +465,7 @@ const app = (function () {
         };
 
         modal.classList.remove('hidden');
+        modal.classList.add('active');
     }
 
     function updateIdentityDropdowns() {

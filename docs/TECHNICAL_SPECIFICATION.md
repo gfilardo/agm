@@ -12,20 +12,33 @@ AGM builds upon standard, heavily audited cryptographic primitives provided by `
 
 ---
 
-## 2. Plausible Deniability & Zero-Metadata Architecture
+### 2.3 Mathematical Basis of Unobtrusive Privacy in Elligator 2
 
-### 2.1 High-Entropy Indistinguishability
-Encrypted payloads contain **zero magic bytes**, **zero plaintext headers**, and **zero recipient key IDs (`kid`)**. To any network observer, ISP, relay server, or forensically seized device, the ciphertext blob is mathematically indistinguishable from random noise or corrupted binary data.
+A fundamental technical question arises regarding key representation: *If a network inspector applies the public Elligator decoding formula to a 32-byte noise string $r$ and obtains a valid Curve25519 point $x$, does this leak key exchange intent?*
 
-### 2.2 Header-Only Trial Decryption
-To decrypt opaque payloads without exposing recipient key hints or metadata:
-1. Every encrypted payload starts with a fixed **80-byte Trial Decryption Header**:
-   - `ephemeral_public_key` (32 bytes)
-   - `header_mac` (16 bytes Poly1305 MAC tag)
-   - `encrypted_sym_key` (32 bytes encrypted AES/XSalsa payload key)
-2. The receiving air-gapped terminal iterates over its stored contact key pairs, executing X25519 ECDH **only on the 80-byte header block**.
-3. Invalid keys fail the 16-byte Poly1305 MAC check in $<0.05$ ms and abort instantly **without touching or attempting to decrypt the multi-megabyte payload**.
-4. Only when the header MAC check succeeds does the device decrypt the 32-byte symmetric payload key $K_{payload}$ and proceed to stream-decrypt the main payload once. Decrypting across 50 contact keypairs adds $<2.5$ ms total computational overhead.
+The mathematical answer is **NO**, because of the universal mapping property of Elligator 2:
+
+> **100% of ALL possible 32-byte numbers in existence map to a valid Curve25519 point under the Elligator 2 decoding formula.**
+
+#### Why Decoding Provides Zero Evidence of Protocol Intent
+
+1. **Standard (Non-Elligator) Public Keys:**
+   - On Curve25519 ($y^2 = x^3 + 486662x^2 + x \pmod{2^{255}-19}$), only **50% of random 32-byte numbers** represent valid curve points (quadratic residues).
+   - If a network filter analyzes a standard key string, it can verify that the string belongs to the specific 50% curve point subset, identifying it as a public key.
+
+2. **Elligator 2 Encoded Noise ($r$):**
+   - Elligator 2 maps every 32-byte string $r \in [0, (p-1)/2]$ to a point on the curve:
+     $$v = \frac{-A}{1 + 2 r^2} \pmod p$$
+   - If $v^3 + A v^2 + v$ is a square, $x = v$; otherwise $x = -v - A \pmod p$.
+   - **Crucially:** If a network inspector passes string $r$ through the formula, it outputs a curve point $x$. However, if the inspector passes 32 bytes of random noise from a generator or a binary file chunk through the formula, **it ALSO outputs a valid curve point $x$!**
+
+Because **every single 32-byte number** (whether a public key, an image fragment, or arbitrary data) decodes to a valid curve point under Elligator 2, automated network analysis **obtains zero statistical evidence** that $r$ was intended as a cryptographic key rather than generic noise.
+
+| Security & Privacy Property | Standard Raw Key | Elligator 2 Encoded Noise ($r$) |
+| :--- | :--- | :--- |
+| **Random String Mapping Ratio** | 50% of strings map to curve points | **100%** of strings map to curve points |
+| **Network Analytics Classification** | Identifiable as Curve Point | **Indistinguishable from Random Noise** |
+| **Metadata Privacy Guarantee** | ❌ Metadata Leaked | ✅ **Maximum Privacy** |
 
 ---
 
