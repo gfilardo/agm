@@ -74,31 +74,47 @@ graph LR
 
 
 
-#### Cryptographic Key & Metadata Schema
+#### Plausible Deniability & Layered Envelope Architecture
 
-To prevent third-party observers from linking network transactions to real-world identities, the system uses ephemeral or rotatable key mappings indexed by a randomized identifier (`Key_ID`).
-
-* **`Key_ID`**: The first 8 bytes of the SHA-256 hash of the specific Public Key.
-* **Anonymization:** Network payloads only expose the `Key_ID` in plaintext, leaving the sender and recipient identities completely hidden from passive network interceptors.
-
-#### QR Code Payload Structure
-
-Data exchanged via QR code uses a tight, structured JSON format containing a plaintext metadata block and an asymmetric ciphertext payload:
-
-```json
-{
-  "meta": {
-    "v": "1.0",
-    "kid": "a1b2c3d4"
-  },
-  "pay": "hQEMAwAAAAAAAAAAAQEAA/9X..."
-}
+To guarantee 100% metadata privacy and plausible deniability against traffic analysis and device seizure, the protocol uses a **Layered Envelope Architecture** separating the **Inner Cryptographic Layer** (pure opaque blob) from the **Outer Transport Layer** (ephemeral streaming frame).
 
 ```
+┌────────────────────────────────────────────────────────────────────────────┐
+│ OUTER TRANSPORT LAYER (Ephemeral Optical Streaming Frame)                  │
+│ [ Chunk Index | Total Chunks | Fountain Seed ] [ Encrypted Chunk Slice ]   │
+└─────────────────────────────────────┬──────────────────────────────────────┘
+                                      │ Camera uses sequence info to assemble
+                                      ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ INNER CRYPTOGRAPHIC LAYER (Pure Opaque Blob - 100% High Entropy Noise)     │
+│ ┌────────────────────────────────────────────────────────────────────────┐ │
+│ │ Encrypted: [ Ephemeral X25519 PubKey | XSalsa20-Poly1305 Ciphertext ]  │ │
+│ │ Plaintext Unpacked: [ Optional Filename | Payload Bytes | Signature ]  │ │
+│ └────────────────────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────────────┘
+```
 
-* **`meta.v`**: Protocol version string.
-* **`meta.kid`**: Plaintext `Key_ID` hint. Used by the receiving Private Device to select the appropriate decryption key from local storage.
-* **`pay`**: Armor-encoded ciphertext encrypted using Curve25519 (X25519) key exchange combined with symmetric authenticated encryption (XSalsa20-Poly1305).
+##### 1. Inner Cryptographic Layer (The Opaque Blob)
+* **High-Entropy Indistinguishability:** Encrypted payloads contain **zero magic bytes**, **zero plaintext headers**, and **zero key IDs (`kid`)**. To any network observer, relay, or forensically seized device, the blob is mathematically indistinguishable from random noise or a corrupted file.
+* **Trial Decryption:** The receiving air-gapped device performs **Trial Decryption** across its stored keypairs. The Poly1305 MAC tag validates instantly when the correct key is hit (taking <2 ms for ~50 contacts).
+* **Plausible Deniability:** Under coercion, a user can plausibly claim the string or file is random garbage data. An adversary cannot prove decryption is possible without holding the recipient's private key.
+
+##### 2. Outer Transport Layer (Ephemeral Streaming Envelope)
+* **Purpose:** Enables optical air-gap streaming when payloads exceed single QR capacity (e.g. multi-megabyte files).
+* **Header Structure:** `[ Chunk Index | Total Chunks | Fountain Seed / Checksum ]`.
+* **Zero Identity Leakage:** Contains zero real-world names, key IDs, or filenames.
+* **Ephemeral Lifecycle:** Exists **only on screens during physical camera scanning**. The Sender Relay strips it off upon scanning, leaving only the pure Opaque Inner Content for network dispatch. The Receiving Relay regenerates fresh outer transport frames on-the-fly when displaying an animated QR stream to the receiving air-gapped device.
+
+---
+
+#### Flexible Relay Dispatch Options (Text vs. Files)
+
+Depending on payload size and user preference, the Public Relay device provides flexible dispatch modes to forward the pure opaque inner content across commercial messengers (Signal, WhatsApp, Telegram):
+
+| Payload Type | Size / Constraint | Relay Dispatch Mode Options | Network Transport Appearance |
+| :--- | :--- | :--- | :--- |
+| **Small Text Message** | Fits in 1 QR ($\le 1.5$ KB) | **1. Base64 / Hex Text:** Pasted directly into messenger chat input.<br>**2. PNG QR Image:** Shared as standard photo attachment via Share Sheet / Clipboard. | Looks like a standard string paste or image attachment. Zero protocol headers. |
+| **Large File / Document** | Exceeds 1 QR ($> 1.5$ KB) | **Raw Binary File Attachment:** Dispatched as a generic binary file (e.g. `.bin` or `.dat`, **never `.agm`**). | Looks like an arbitrary encrypted file transfer. |
 
 ---
 
