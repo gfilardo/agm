@@ -96,7 +96,11 @@ To guarantee 100% metadata privacy and plausible deniability against traffic ana
 
 ##### 1. Inner Cryptographic Layer (The Opaque Blob)
 * **High-Entropy Indistinguishability:** Encrypted payloads contain **zero magic bytes**, **zero plaintext headers**, and **zero key IDs (`kid`)**. To any network observer, relay, or forensically seized device, the blob is mathematically indistinguishable from random noise or a corrupted file.
-* **Trial Decryption:** The receiving air-gapped device performs **Trial Decryption** across its stored keypairs. The Poly1305 MAC tag validates instantly when the correct key is hit (taking <2 ms for ~50 contacts).
+* **Header-Only Trial Decryption:** To decrypt opaque payloads without compromising metadata privacy, the receiving air-gapped device executes **Header-Only Trial Decryption**:
+  * Payloads use a hybrid structure containing a tiny 32-byte encrypted symmetric key header (authenticated via Poly1305 MAC) at the head of the ciphertext.
+  * The receiving device iterates through its stored contact keypairs, attempting key exchange and MAC verification **only on this tiny 32-byte header block**.
+  * Wrong keys fail the Poly1305 MAC check in $<0.05$ ms and abort immediately **without decrypting or touching the large file payload**.
+  * Only when the 32-byte header MAC check succeeds does the device proceed to stream and decrypt the main payload once. Decrypting a multi-megabyte file across 50 contact keys introduces $<2.5$ ms of total computational overhead.
 * **Plausible Deniability:** Under coercion, a user can plausibly claim the string or file is random garbage data. An adversary cannot prove decryption is possible without holding the recipient's private key.
 
 ##### 2. Outer Transport Layer (Ephemeral Streaming Envelope)
