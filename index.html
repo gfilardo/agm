@@ -51,13 +51,14 @@
 
                 <div id="private-dashboard" class="glass-panel hidden">
                     <div class="tabs">
-                        <button type="button" class="tab active" data-target="tab-compose">Compose</button>
+                        <button type="button" class="tab active" data-target="tab-compose">Message</button>
+                        <button type="button" class="tab" data-target="tab-send-file">File</button>
                         <button type="button" class="tab" data-target="tab-read">Read</button>
                         <button type="button" class="tab" data-target="tab-identity">Identities</button>
                         <button type="button" class="tab" data-target="tab-contacts">Contacts</button>
                     </div>
 
-                    <!-- Compose Tab -->
+                    <!-- Compose Message Tab -->
                     <div id="tab-compose" class="tab-content active">
                         <div class="form-group">
                             <label>Send As (Your Identity)</label>
@@ -74,40 +75,87 @@
                             <input type="text" id="input-recipient-pub" placeholder="Paste recipient's public key">
                         </div>
                         <div class="form-group">
-                            <label>Message</label>
-                            <textarea id="input-message" rows="4" placeholder="Enter your secret message..."></textarea>
+                            <label>Secret Message</label>
+                            <textarea id="input-message" rows="4" placeholder="Enter your confidential message..."></textarea>
                         </div>
-                        <button type="button" id="btn-encrypt" class="btn btn-primary w-100">Encrypt to QR</button>
+                        <button type="button" id="btn-encrypt" class="btn btn-primary w-100">Encrypt Payload</button>
                         
                         <div id="encrypt-result" class="qr-result hidden">
-                            <p>Scan this with your Public Relay device:</p>
+                            <p>Scan QR code with Public Relay or copy text payload:</p>
                             <div id="qr-outbound" class="qr-container"></div>
+                            <textarea id="output-message-text" rows="3" readonly class="mt-2"></textarea>
+                            <button type="button" id="btn-copy-outbound-msg" class="btn btn-secondary btn-sm w-100 mt-2"><i class="fa-solid fa-copy"></i> Copy Payload Text</button>
                         </div>
                     </div>
 
-                    <!-- Read Tab -->
+                    <!-- Send File Tab -->
+                    <div id="tab-send-file" class="tab-content hidden">
+                        <div class="form-group">
+                            <label>Send As (Your Identity)</label>
+                            <select id="select-file-sender-identity"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Recipient Contact</label>
+                            <select id="select-file-recipient-contact"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select File (Photos, PDFs, Documents)</label>
+                            <input type="file" id="input-file-select" style="background: transparent; padding: 0.5rem 0;">
+                        </div>
+                        <button type="button" id="btn-encrypt-file" class="btn btn-primary w-100 mt-2">Encrypt File to Envelopes</button>
+
+                        <div id="file-encrypt-result" class="result-box hidden mt-4">
+                            <h4>Encrypted File Ready</h4>
+                            <p id="file-encrypt-status" style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;"></p>
+
+                            <!-- Animated QR Stream Controls -->
+                            <div class="qr-container mt-2">
+                                <div id="qr-file-stream"></div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;" class="mt-2">
+                                <button type="button" id="btn-stream-play" class="btn btn-secondary btn-sm"><i class="fa-solid fa-play"></i> Play QR Stream</button>
+                                <button type="button" id="btn-stream-pause" class="btn btn-danger btn-sm"><i class="fa-solid fa-pause"></i> Pause</button>
+                            </div>
+                            <p id="stream-frame-indicator" style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.5rem; text-align: center;">Frame 1 of 1</p>
+                            
+                            <hr style="border-color: var(--glass-border); margin: 1rem 0;">
+
+                            <button type="button" id="btn-download-payload-bin" class="btn btn-secondary w-100"><i class="fa-solid fa-download"></i> Save payload.bin (USB Transfer)</button>
+                        </div>
+                    </div>
+
+                    <!-- Read / Decrypt Tab -->
                     <div id="tab-read" class="tab-content hidden">
-                        <p style="margin-bottom: 1rem;">Scan the incoming message QR code from your Public Relay device, or paste the payload manually.</p>
+                        <p style="margin-bottom: 0.5rem;">Scan incoming payload QR code or paste text/file payload.</p>
                         
                         <div class="form-group">
-                            <label>Paste encrypted payload (JSON)</label>
-                            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
-                                <textarea id="input-manual-incoming" rows="4" placeholder='{"meta":..., "pay":...}'></textarea>
-                                <button type="button" id="btn-decrypt-manual" class="btn btn-primary w-100">Decrypt Payload</button>
-                            </div>
+                            <label>Paste Encrypted Text Payload</label>
+                            <textarea id="input-manual-incoming" rows="3" placeholder="Paste Base64 payload or Outer Envelope text..."></textarea>
+                            <button type="button" id="btn-decrypt-manual" class="btn btn-primary w-100 mt-2">Trial Decrypt Text Payload</button>
                         </div>
 
-                        <div style="text-align: center; margin: 1.5rem 0; color: #94a3b8; font-size: 0.875rem;">— OR —</div>
+                        <div style="text-align: center; margin: 1rem 0; color: #94a3b8; font-size: 0.85rem;">— OR —</div>
 
-                        <button type="button" id="btn-scan-incoming" class="btn btn-secondary w-100 mb-4">Scan QR Code</button>
+                        <div class="form-group">
+                            <label>Import payload.bin File</label>
+                            <input type="file" id="input-incoming-file-bin" style="background: transparent; padding: 0.25rem 0;">
+                            <button type="button" id="btn-decrypt-file-bin" class="btn btn-secondary w-100 mt-2">Decrypt Payload File</button>
+                        </div>
+
+                        <div style="text-align: center; margin: 1rem 0; color: #94a3b8; font-size: 0.85rem;">— OR —</div>
+
+                        <button type="button" id="btn-scan-incoming" class="btn btn-secondary w-100 mb-4"><i class="fa-solid fa-camera"></i> Scan QR Code / Animated Stream</button>
                         <div id="scanner-incoming-container" class="scanner-container hidden">
                             <div id="reader-incoming"></div>
                             <button type="button" id="btn-stop-scan-incoming" class="btn btn-danger btn-sm mt-2">Stop Scanner</button>
                         </div>
                         
                         <div id="decrypt-result" class="result-box hidden mt-4">
-                            <label>Decrypted Message:</label>
+                            <label>Decryption Result:</label>
                             <p id="decrypted-text" class="message-text"></p>
+                            <div id="file-download-container" class="hidden mt-2">
+                                <a id="link-download-decrypted-file" class="btn btn-primary w-100" download><i class="fa-solid fa-file-arrow-down"></i> Save Decrypted File</a>
+                            </div>
                         </div>
                     </div>
 
@@ -138,9 +186,9 @@
                                 <input type="text" id="input-new-contact-name" placeholder="Contact Name (e.g. Alice)">
                             </div>
                             <div class="form-group mt-2">
-                                <label style="margin-bottom: 0.5rem; display: block; color: var(--text-color); font-size: 0.875rem;">Contact's Public Key (Base64)</label>
+                                <label>Mode A: In-Person Scan / Envelope Key</label>
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <input type="text" id="input-new-contact-pub" placeholder="Paste or scan key" style="flex: 1; min-width: 0;">
+                                    <input type="text" id="input-new-contact-pub" placeholder="Paste envelope key string" style="flex: 1; min-width: 0;">
                                     <button type="button" id="btn-scan-contact-pub" class="btn btn-primary" title="Scan QR"><i class="fa-solid fa-qrcode"></i></button>
                                 </div>
                             </div>
@@ -148,7 +196,14 @@
                                 <div id="reader-contact"></div>
                                 <button type="button" id="btn-stop-scan-contact" class="btn btn-danger btn-sm mt-2">Stop Scanner</button>
                             </div>
-                            <button type="button" id="btn-add-contact" class="btn btn-secondary w-100 mt-2">Save Contact</button>
+
+                            <div class="form-group mt-3">
+                                <label>Mode B: Remote Plausible Noise Key (Format 1 Hex or Format 2 .dat File)</label>
+                                <input type="text" id="input-remote-noise-hex" placeholder="Paste 64-char Hex Noise string">
+                                <input type="file" id="input-remote-noise-file" class="mt-1" style="background: transparent; padding: 0.25rem 0;">
+                            </div>
+
+                            <button type="button" id="btn-add-contact" class="btn btn-secondary w-100 mt-3">Save Contact</button>
                         </div>
                     </div>
                 </div>
@@ -166,58 +221,48 @@
             <div class="content-scroll">
                 <div class="glass-panel">
                     <div class="tabs">
-                        <button type="button" class="tab active" data-target="tab-relay-out">Send</button>
-                        <button type="button" class="tab" data-target="tab-relay-in">Receive</button>
+                        <button type="button" class="tab active" data-target="tab-relay-out">Send Relay</button>
+                        <button type="button" class="tab" data-target="tab-relay-in">Receive Relay</button>
                     </div>
 
-                    <!-- Send Tab -->
+                    <!-- Send Relay Tab -->
                     <div id="tab-relay-out" class="tab-content active">
-                        <p>Scan the encrypted QR from your Private device to send it.</p>
-                        
-                        <div class="format-toggle-group mb-4 mt-2">
-                            <label class="toggle-option">
-                                <input type="radio" name="relay-format" value="qr" checked>
-                                <span class="toggle-label"><i class="fa-solid fa-qrcode"></i> QR Image</span>
-                            </label>
-                            <label class="toggle-option">
-                                <input type="radio" name="relay-format" value="text">
-                                <span class="toggle-label"><i class="fa-solid fa-align-left"></i> Raw Text</span>
-                            </label>
-                        </div>
+                        <p>Scan encrypted QR code from Private Device or upload file payload.</p>
 
-                        <button type="button" id="btn-scan-outbound" class="btn btn-primary w-100 mb-4">Start Scanner</button>
+                        <button type="button" id="btn-scan-outbound" class="btn btn-primary w-100 mb-4"><i class="fa-solid fa-camera"></i> Start Scanner</button>
                         <div id="scanner-outbound-container" class="scanner-container hidden">
                             <div id="reader-outbound"></div>
                             <button type="button" id="btn-stop-scan-outbound" class="btn btn-danger btn-sm mt-2">Stop</button>
                         </div>
+
+                        <div style="text-align: center; margin: 0.5rem 0; color: #94a3b8; font-size: 0.85rem;">— OR —</div>
+
+                        <div class="form-group">
+                            <label>Upload payload.bin file</label>
+                            <input type="file" id="input-relay-payload-file" style="background: transparent; padding: 0.25rem 0;">
+                        </div>
                         
-                        <div id="scan-result-outbound" class="result-box hidden">
+                        <div id="scan-result-outbound" class="result-box hidden mt-4">
                             <div class="result-section">
-                                <label style="text-align: center; display: block;">QR Code Image</label>
-                                <div id="qr-outbound-relay" class="qr-container mb-2"></div>
-                                <button type="button" id="btn-copy-outbound-qr" class="btn btn-secondary btn-sm w-100"><i class="fa-solid fa-copy"></i> Copy Image</button>
+                                <label style="text-align: center; display: block;">Payload Ready for Chat Network</label>
+                                <textarea id="payload-outbound-text" rows="4" readonly></textarea>
+                                <button type="button" id="btn-copy-outbound-text" class="btn btn-secondary btn-sm w-100 mt-2"><i class="fa-solid fa-copy"></i> Copy to Clipboard</button>
                             </div>
-
-                            <div class="result-section mt-4">
-                                <label>Raw JSON Text</label>
-                                <textarea id="payload-outbound-text" rows="3" readonly class="mb-2" style="font-size: 0.8rem;"></textarea>
-                                <button type="button" id="btn-copy-outbound-text" class="btn btn-secondary btn-sm w-100"><i class="fa-solid fa-copy"></i> Copy Text</button>
-                            </div>
-
-                            <button type="button" id="btn-share-outbound" class="btn btn-primary w-100 mt-4"><i class="fa-solid fa-share-nodes"></i> Share via App...</button>
                         </div>
                     </div>
 
-                    <!-- Receive Tab -->
+                    <!-- Receive Relay Tab -->
                     <div id="tab-relay-in" class="tab-content hidden">
-                        <div class="form-group">
-                            <label>Paste incoming payload (JSON)</label>
-                            <textarea id="input-incoming-payload" rows="4" placeholder='{"meta":..., "pay":...}'></textarea>
-                        </div>
-                        <button type="button" id="btn-show-incoming-qr" class="btn btn-secondary w-100">Show as QR</button>
+                        <p>Paste incoming payload text or upload payload file from Signal/WhatsApp chat.</p>
                         
-                        <div id="incoming-qr-result" class="qr-result hidden">
-                            <p>Scan this with your Private device:</p>
+                        <div class="form-group">
+                            <label>Incoming Text Payload</label>
+                            <textarea id="input-incoming-payload" rows="4" placeholder="Paste incoming Base64 text payload here..."></textarea>
+                        </div>
+                        <button type="button" id="btn-show-incoming-qr" class="btn btn-primary w-100">Display QR Code for Private Device</button>
+                        
+                        <div id="incoming-qr-result" class="result-box hidden mt-4">
+                            <p>Point Private Device camera at this screen to scan:</p>
                             <div id="qr-inbound" class="qr-container"></div>
                         </div>
                     </div>
@@ -226,7 +271,33 @@
         </div>
     </div>
 
-    <!-- Vite App Logic -->
+    <!-- Modals for Identity Key Export -->
+    <div id="modal-key-export" class="view hidden" style="background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 1.5rem; z-index: 100;">
+        <div class="glass-panel" style="max-width: 400px; width: 100%;">
+            <h3 id="modal-key-title">Public Key Export</h3>
+            
+            <div id="export-mode-inperson" class="mt-2">
+                <label style="font-size: 0.85rem; color: #cbd5e1;">Mode A: In-Person Envelope QR (Protobuf)</label>
+                <div id="qr-export-inperson" class="qr-container mt-2"></div>
+            </div>
+
+            <div id="export-mode-remote" class="mt-3">
+                <label style="font-size: 0.85rem; color: #cbd5e1;">Mode B: Remote Plausible Noise Key (Elligator 2)</label>
+                <div class="info-group mt-1">
+                    <label style="font-size: 0.75rem;">Format 1 (Raw Hex Noise Text):</label>
+                    <code id="code-export-hex" class="code-block"></code>
+                    <button type="button" id="btn-copy-export-hex" class="btn btn-secondary btn-sm w-100 mt-1"><i class="fa-solid fa-copy"></i> Copy Hex String</button>
+                </div>
+                <div class="info-group mt-2">
+                    <label style="font-size: 0.75rem;">Format 2 (Generic Binary .dat File):</label>
+                    <button type="button" id="btn-download-export-dat" class="btn btn-secondary btn-sm w-100"><i class="fa-solid fa-download"></i> Download key_data.dat</button>
+                </div>
+            </div>
+
+            <button type="button" id="btn-close-key-modal" class="btn btn-danger w-100 mt-3">Close</button>
+        </div>
+    </div>
+
     <script type="module" src="/main.js"></script>
 </body>
 </html>

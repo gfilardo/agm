@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package agm;
+
+enum PacketType {
+  UNKNOWN = 0;
+  KEY_EXCHANGE = 1;
+  ENCRYPTED_MESSAGE = 2;
+  FILE_CHUNK = 3;
+}
+
+message OuterEnvelope {
+  uint32 version = 1;
+  PacketType type = 2;
+  uint32 chunk_index = 3;
+  uint32 total_chunks = 4;
+  string stream_id = 5;
+  uint32 checksum = 6;
+  bytes payload = 7;
+}
+
+message InnerEnvelopeHeader {
+  bytes ephemeral_public_key = 1; // 32 bytes X25519
+  bytes header_mac = 2;           // 16 bytes Poly1305 MAC
+  bytes encrypted_sym_key = 3;    // 32 bytes encrypted payload key
+}
+
+message InnerEnvelope {
+  InnerEnvelopeHeader header = 1;
+  bytes ciphertext = 2;
+}
+
+message InnerPayload {
+  string sender_key_id = 1;
+  uint64 timestamp = 2;
+  string content_type = 3;        // "text" or "file"
+  string filename = 4;
+  bytes content = 5;
+  bytes signature = 6;
+}
+
+message PublicKeyPayload {
+  string key_id = 1;
+  string algorithm = 2;
+  bytes public_key = 3;           // 32 bytes X25519
+  string display_name = 4;
+  uint64 timestamp = 5;
+  bytes signature = 6;
+}
